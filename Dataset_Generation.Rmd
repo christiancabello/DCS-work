@@ -1,9 +1,9 @@
 ---
-title: "test"
+title: "Investigating Educational Outcomes for Providence Community Advocacy Dataset Generation"
 output:
   pdf_document: default
   html_document: default
-date: "2025-03-04"
+date: "2025-03-31"
 ---
 
 ```{r setup, include=FALSE}
@@ -20,7 +20,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 Here we will provide all of the libraries and packages that are utilized in our R files. If you **do not** the packages downloaded, you can remove the comment, highlight the line(s), and press 'command' + 'return' to run only the highlighted lines. This way, you do not need to re-load any of the libraries.
 
-```{r}
+```{r, warning= FALSE}
 
 # use 'install.packages()' if you do not already have the packages downloaded
 # install.packages("readxl")
@@ -34,7 +34,8 @@ Here we will provide all of the libraries and packages that are utilized in our 
 # install.packages("forcats")
 # tinytex::install_tinytex()
 
-# library('package name') is to load in the packages that will be used throughout the file
+# library('package name') is to load in the packages that will be used throughout 
+  # the file
 library(readxl) 
 library(tidyr)
 library(dplyr) 
@@ -60,12 +61,13 @@ This allows us to read in each individual data excel file, and only select the s
 
 **\*\* Note:** In order to use the 'read_excel' function, make sure to input the **absolute path** **of the excel file**, meaning you include the root '\~' and use '/' to depict folders. For example, these files can be found by navigating to the Desktop, selecting the 'Thesis' folder, then selecting the 'R tests' folder within the 'Thesis' folder.
 
-```{r messages = FALSE}
+```{r, messages= FALSE}
 my_data1 <- read_excel("~/Desktop/Thesis/R tests/Assessments_201718.xlsx", sheet = 4) 
 my_data2 <- read_excel("~/Desktop/Thesis/R tests/Assessments_201819.xlsx", sheet = 1) 
 my_data3 <- read_excel("~/Desktop/Thesis/R tests/Assessments_202122.xlsx", sheet = 4) 
 my_data4 <- read_excel("~/Desktop/Thesis/R tests/Assessments_202223.xlsx", sheet = 2, 
                        skip = 4665)
+my_data5 <- read_excel("~/Desktop/Thesis/R tests/Assessments_202324.xlsx", sheet = 2, skip = 4743)
 ```
 
 ## Excel File for the 2017-2018 School Year
@@ -262,7 +264,6 @@ providence_data18 <- providence_data18 %>%
 # in case there are any values that read 'NA', we will change them to be a '0' instead
 providence_data18[is.na(providence_data18)] <- 0
 
-print(providence_data18)
 ```
 
 ## Excel File for the 2018-2019 School Year
@@ -312,7 +313,6 @@ providence_data19 <- providence_data19 %>%
 # in case there are any values that read 'NA', we will change them to be a '0' instead
 providence_data19[is.na(providence_data19)] <- 0
 
-print(providence_data19)
 ```
 
 ## Excel File for the 2021-2022 School Year
@@ -363,7 +363,6 @@ providence_data22 <- providence_data22 %>%
 # in case there are any values that read 'NA', we will change them to be a '0' instead
 providence_data22[is.na(providence_data22)] <- 0
 
-print(providence_data22)
 ```
 
 ## Excel File for the 2022-2023 School Year
@@ -410,7 +409,6 @@ for (i in providence_data23$SchName){
 
 # adding the year and school type into their own columns 
   # then reordering the columns to match every other file 
-print(providence_data23)
 providence_data23$Year <- "2023"
 providence_data23$SchType <- sch_type23
 providence_data23 <- providence_data23 %>%  
@@ -420,7 +418,62 @@ providence_data23 <- providence_data23 %>%
 # in case there are any values that read 'NA', we will change them to be a '0' instead
 providence_data23[is.na(providence_data23)] <- 0
 
-print(providence_data23)
+```
+
+## Excel File for the 2023-2024 School Year
+
+And lastly, we will extract the relevant data from the 2022-2024 school year. Instead of changing the column names after creating the providence_data23 variable, we will opt to do it for the my_data4 variable.
+
+The column naming conventions for this year of data were different from past years. Their names were either based on their numerical position or were located in the wrong column. By changing it now, we will avoid potential difficulty for the viewer to understand the information present and compare it to the other school years being measured. This will also ensure that the column names for the providence_data24 variable will match the my_data4 column names meaning we won't have to change it later.
+
+```{r}
+
+# removing the first column of entries of data
+my_data5 <- my_data5[ -c(1) ]
+
+# renaming all of the columns in the tibble, since the original excel file has different 
+  # column names compared to the other files
+colnames(my_data5) <- c('DistCode', 'DistName', 'SchCode', 'SchName', 
+                        'GroupType', 'GroupName', 'TestSubject', 
+                        'Level_1_Count', 'Level_2_Count', 'Level_3_Count', 
+                        'Level_4_Count', 'Total_Count', 'Level_1_Percentage', 
+                        'Level_2_Percentage', 'Level_3_Percentage', 
+                        'Level_4_Percentage')
+
+# filtering to only look at Providence District, changing values of DistName column
+providence_data24 <- dplyr::filter(my_data5, DistName == 'Providence')   
+
+# creating a vector that contains all of the school types for each corresponding school
+sch_type24 <- c()
+for (i in providence_data24$SchName){ 
+  if (grepl("Elementary", i, ignore.case = TRUE)){ 
+    sch_type24 <- c(sch_type24, "Elementary School")
+  } 
+  else if (grepl("Middle/High", i, ignore.case = TRUE)){
+    sch_type24 <- c(sch_type24, "Middle/High School")
+  }
+  else if (grepl("Middle", i, ignore.case = TRUE)){ 
+    sch_type24 <- c(sch_type24, "Middle School")
+  } 
+  else if (grepl("Academy", i, ignore.case = TRUE) 
+           || grepl("High", i, ignore.case = TRUE)) {
+    sch_type24 <- c(sch_type24, "High School")
+  }
+  else sch_type24 <- c(sch_type24, "Elementary School")
+} 
+
+
+# adding the year and school type into their own columns 
+  # then reordering the columns to match every other file 
+providence_data24$Year <- "2024"
+providence_data24$SchType <- sch_type24
+providence_data24 <- providence_data24 %>%  
+  relocate(Year, .after = SchCode)     %>%
+  relocate(SchType, .after = SchName) 
+
+# in case there are any values that read 'NA', we will change them to be a '0' instead
+providence_data24[is.na(providence_data24)] <- 0
+
 ```
 
 ## Creating the Amalgamated Providence Dataset
@@ -432,7 +485,8 @@ Now, with each Excel File having the same format as in number of rows, their nam
 # row binding all of the datasets, which combines all entries from excel sheets with
   # the same number of columns and names
 providence_data <- rbind(providence_data18, providence_data19, providence_data22, 
-                         providence_data23)  
+                         providence_data23, providence_data24)  
+
 providence_data$Level_1_Percentage <- providence_data$Level_1_Percentage * 100
 providence_data$Level_2_Percentage <- providence_data$Level_2_Percentage * 100
 providence_data$Level_3_Percentage <- providence_data$Level_3_Percentage * 100
@@ -587,6 +641,9 @@ for (i in providence_data$Year){
   if (grepl("2023", i, ignore.case = TRUE)){ 
     takeover <- c(takeover, "Post Takeover")
   } 
+  if (grepl("2024", i, ignore.case = TRUE)){
+    takeover <- c(takeover, "Post Takeover")
+  }
 }
 
 # adding the year and school type into their own columns 
@@ -603,12 +660,12 @@ print(providence_data)
 
 Below is the code to download the Amalgamated Providence Dataset. To ensure easier access, each time an amalgamated dataset is downloaded, it will be placed in a folder named 'Vecina_Data'. If a file already exists, it will not be re-downloaded and in its place, the message of 'File already exists' will be printed.
 
-```{r}
+```{r, output= FALSE}
 
 if (!dir.exists("Vecina_Data")) 
   {dir.create(file.path("Vecina_Data"), recursive = TRUE)}
 
-if (!file.exists("~/Vecina_Data/Charter_Data.csv")){
+if (!file.exists("~/Vecina_Data/Providence_Data.csv")){
    write.csv(providence_data,"~/Vecina_Data/Providence_Data.csv", row.names = TRUE)
     } else {
     print("File already exists.")
@@ -626,6 +683,8 @@ if (!file.exists("~/Vecina_Data/Charter_Data.csv")){
 Next, we will be looking at the data of all charter schools. In total, there were 20 schools included in the Report Card data repository, with the numbers being provided by Victor Piercey. We will follow the same semantics with the Providence Data in terms of column names, as they will later be combined into a finalized dataset.
 
 **\*\* Note:** In the event that charter schools are added or removed to the RIDE Report Card dataset, adjust the **dist_nums** variable to include or remove the district numbers.
+
+print(charter_data)
 
 ```{r}
   
@@ -836,8 +895,20 @@ charter_data4$Year <- '2023'
 # rearranging the variable to follow the order of earlier large files
 charter_data4 <- charter_data4 %>% relocate(Year, .after = SchCode)
 
+# filtering the third year of data to only keep the districts that 
+  # have charter schools
+charter_data5 <- my_data5 %>% dplyr::filter(DistCode %in% dist_nums)
+
+# adding the respective year to the charter_data4 variable
+charter_data5$Year <- '2024'  
+
+# rearranging the variable to follow the order of earlier large files
+charter_data5 <- charter_data5 %>% relocate(Year, .after = SchCode)
+print(charter_data5)
+
 # row binding each year of charter data to make the charter_data variable
-charter_data <- rbind(charter_data1, charter_data2, charter_data3, charter_data4) 
+charter_data <- rbind(charter_data1, charter_data2, charter_data3, charter_data4, 
+                      charter_data5) 
 
 # changing all values of 'NA' to '0'
 charter_data[is.na(charter_data)] <- 0
@@ -940,15 +1011,13 @@ for (i in charter_data$SchCode){
 charter_data$SchType <- ch_sch_type 
 charter_data <- charter_data %>% relocate(SchType, .after = SchName)
 
-print(charter_data)
-
 ```
 
 ## Downloading the Amalgamated Charter Dataset
 
 Below is the code to download the Amalgamated Charter Dataset.
 
-```{r}
+```{r, output= FALSE}
 
 if (!dir.exists("Vecina_Data")){ 
    dir.create(file.path("Vecina_Data"), recursive = TRUE)
@@ -995,6 +1064,9 @@ for (i in charter_data$Year){
     ctakeover <- c(ctakeover, "Post Takeover")
   } 
   else if (grepl("2023", i, ignore.case = TRUE)){ 
+    ctakeover <- c(ctakeover, "Post Takeover")
+  } 
+  else if (grepl("2024", i, ignore.case = TRUE)){ 
     ctakeover <- c(ctakeover, "Post Takeover")
   } 
 }
@@ -1105,14 +1177,13 @@ charter_data <- charter_data %>% relocate(Takeover, .after = Year) %>%
 
 # row binding the updated providence_data and charter_data variables
 finalized_data <- rbind(providence_data, charter_data)
-print(finalized_data)
 ```
 
 ## Downloading the Amalgamated Finalized Dataset
 
 Below is the code to download the Amalgamated Finalized Dataset.
 
-```{r}
+```{r, output= FALSE}
 
 if (!dir.exists("Vecina_Data")) 
 {dir.create(file.path("Vecina_Data"), recursive = TRUE)}
@@ -1121,7 +1192,8 @@ if (!file.exists("~/Vecina_Data/Finalized_Data.csv")){
    write.csv(finalized_data,"~/Vecina_Data/Finalized_Data.csv", row.names = TRUE)
     } else {
     print("File already exists.")
-      }
+    }
+
 ```
 
 ## ------------------------------------------------------------------------------------------------------
@@ -1141,12 +1213,14 @@ ri_data1 <- read_excel("~/Desktop/Thesis/R tests/Assessments_201718.xlsx", sheet
 ri_data2 <- read_excel("~/Desktop/Thesis/R tests/Assessments_201819.xlsx", sheet = 1) 
 ri_data3 <- read_excel("~/Desktop/Thesis/R tests/Assessments_202122.xlsx", sheet = 4) 
 ri_data4 <- read_excel("~/Desktop/Thesis/R tests/Assessments_202223.xlsx", sheet = 2)
+ri_data5 <- read_excel("~/Desktop/Thesis/R tests/Assessments_202324.xlsx", sheet = 2)
 
 # removing unnecessary columns from each ri_data* variable
 ri_data1 <- ri_data1[ -c(3) ]
 ri_data2 <- ri_data2[ -c(2, 4) ]
 ri_data3 <- ri_data3[ -c(2, 4) ]
 ri_data4 <- ri_data4[ -c(1, 3, 5) ] 
+ri_data5 <- ri_data5[ -c(1) ]
 
 # adding in the Year column with value of '2018'
 ri_data1$Year <- '2018' 
@@ -1163,6 +1237,11 @@ ri_data3 <- ri_data3 %>% relocate(Year, .after = SchCode)
 # adding in the Year column with value of '2023'
 ri_data4$Year <- '2023' 
 ri_data4 <- ri_data4 %>% relocate(Year, .after = SchCode)
+
+# adding in the Year column with value of '2024'
+ri_data5$Year <- '2024' 
+View(ri_data5)
+ri_data5 <- ri_data5 %>% relocate(Year, .after = SchCode)
 
 # renaming all of the columns in the tibbles, we will use this exact code to make sure 
   # all of the column names for each excel file match 
@@ -1187,8 +1266,11 @@ colnames(ri_data4) <-  c('DistCode', 'SchCode', 'Year', 'GroupType', 'GroupName'
                         'Level_1_Percentage', 'Level_2_Percentage', 'Level_3_Percentage', 
                         'Level_4_Percentage')
 
+print(ri_data1) 
+print(ri_data5)
+
 # row binding all of the RI data variables to make the RI data DOT variable
-ri_data <- rbind(ri_data1, ri_data2, ri_data3, ri_data4)
+ri_data <- rbind(ri_data1, ri_data2, ri_data3, ri_data4, ri_data5)
 print(ri_data)
 ```
 
@@ -1196,8 +1278,7 @@ print(ri_data)
 
 Below is the code to download the Amalgamated Finalized Dataset.
 
-```{r}
-
+```{r, output= FALSE}
 if (!dir.exists("Vecina_Data")) 
 {dir.create(file.path("Vecina_Data"), recursive = TRUE)}
 
@@ -1205,6 +1286,7 @@ if (!file.exists("~/Vecina_Data/RhodeIsland_Data.csv")){
    write.csv(ri_data,"~/Vecina_Data/RhodeIsland_Data.csv", row.names = TRUE)
     } else {
     print("File already exists.")
-      }
+    }
 
+View(ri_data)
 ```
